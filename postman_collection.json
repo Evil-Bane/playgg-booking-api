@@ -1,0 +1,186 @@
+{
+  "info": {
+    "name": "PlayGG Cafe Booking API",
+    "description": "Cafe booking API for PlayGG. Run the **Auth → Login** request first — it automatically saves the JWT into the `token` collection variable, which the protected requests (create booking, cancel booking, create cafe) then use.\n\nSet the `baseUrl` variable to your local server (default) or your deployed URL.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://127.0.0.1:8000", "type": "string" },
+    { "key": "token", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Service info (root)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/", "host": ["{{baseUrl}}"], "path": [""] }
+          }
+        },
+        {
+          "name": "Health check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/health", "host": ["{{baseUrl}}"], "path": ["health"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login (saves token)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json && json.access_token) {",
+                  "  pm.collectionVariables.set('token', json.access_token);",
+                  "  console.log('Saved JWT to {{token}}');",
+                  "}",
+                  "pm.test('login returns a token', function () {",
+                  "  pm.expect(json.access_token).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"playgg123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/login", "host": ["{{baseUrl}}"], "path": ["login"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cafes",
+      "item": [
+        {
+          "name": "List all cafes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/cafes", "host": ["{{baseUrl}}"], "path": ["cafes"] }
+          }
+        },
+        {
+          "name": "List cafes by city",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/cafes?city=Jaipur",
+              "host": ["{{baseUrl}}"],
+              "path": ["cafes"],
+              "query": [{ "key": "city", "value": "Jaipur" }]
+            }
+          }
+        },
+        {
+          "name": "List cafes (paginated)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/cafes?page=1&limit=2",
+              "host": ["{{baseUrl}}"],
+              "path": ["cafes"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "2" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get a single cafe",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/cafes/1", "host": ["{{baseUrl}}"], "path": ["cafes", "1"] }
+          }
+        },
+        {
+          "name": "Cafe availability for a date",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/cafes/1/availability?date=2026-12-25",
+              "host": ["{{baseUrl}}"],
+              "path": ["cafes", "1", "availability"],
+              "query": [{ "key": "date", "value": "2026-12-25" }]
+            }
+          }
+        },
+        {
+          "name": "Create a cafe (auth)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"New Arena\",\n  \"location\": \"C-Scheme\",\n  \"city\": \"Jaipur\",\n  \"price_per_hour\": 110.0,\n  \"total_seats\": 16\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/cafes", "host": ["{{baseUrl}}"], "path": ["cafes"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bookings",
+      "item": [
+        {
+          "name": "Create a booking (auth)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cafe_id\": 1,\n  \"user_name\": \"alice\",\n  \"date\": \"2026-12-25\",\n  \"time_slot\": \"18:00-19:00\",\n  \"seats_booked\": 4\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/bookings", "host": ["{{baseUrl}}"], "path": ["bookings"] }
+          }
+        },
+        {
+          "name": "List bookings for a cafe",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/bookings/1", "host": ["{{baseUrl}}"], "path": ["bookings", "1"] }
+          }
+        },
+        {
+          "name": "Cancel a booking (auth)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/bookings/1", "host": ["{{baseUrl}}"], "path": ["bookings", "1"] }
+          }
+        }
+      ]
+    }
+  ]
+}
