@@ -22,7 +22,7 @@ class Settings(BaseSettings):
 
     # Seeded demo admin used to obtain a token via POST /login.
     ADMIN_USERNAME: str = "admin"
-    ADMIN_PASSWORD: str = "playgg123"
+    ADMIN_PASSWORD: str = "admin"
 
     # --- Booking slots ------------------------------------------------------
     # Hourly slots are generated for the [OPENING_HOUR, CLOSING_HOUR) window
