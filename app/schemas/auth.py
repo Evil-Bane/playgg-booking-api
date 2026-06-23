@@ -1,10 +1,10 @@
 """Pydantic schemas for the auth (login) flow."""
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class LoginRequest(BaseModel):
     username: str
-    password: str
+    password: str = Field(..., max_length=72)
 
 
 class TokenResponse(BaseModel):

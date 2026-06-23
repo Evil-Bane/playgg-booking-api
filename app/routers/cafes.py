@@ -24,7 +24,7 @@ def list_cafes(
     base = select(Cafe)
     count = select(func.count(Cafe.id))
     if city:
-        condition = func.lower(Cafe.city) == city.lower()
+        condition = func.lower(Cafe.city) == city.strip().lower()
         base = base.where(condition)
         count = count.where(condition)
 

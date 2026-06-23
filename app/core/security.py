@@ -41,6 +41,7 @@ def require_auth(
             credentials.credentials,
             settings.JWT_SECRET,
             algorithms=[settings.JWT_ALGORITHM],
+            options={"require": ["exp", "sub"]},
         )
     except jwt.ExpiredSignatureError:
         raise APIError(401, "Token has expired. Please log in again.", code="token_expired")

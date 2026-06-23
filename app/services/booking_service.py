@@ -117,9 +117,15 @@ def create_booking(
     db.add(booking)
     try:
         db.commit()
-    except IntegrityError:
+    except IntegrityError as exc:
         # Backstop for the unique-index race if two duplicate requests interleave.
         db.rollback()
+        orig = getattr(exc, "orig", None)
+        pgcode = getattr(orig, "pgcode", None)
+        msg = str(orig).lower() if orig else str(exc).lower()
+        is_unique = pgcode == "23505" if pgcode else "unique" in msg
+        if not is_unique:
+            raise
         raise APIError(
             409,
             f"'{user_name}' already has a booking for this slot.",
@@ -141,7 +147,10 @@ def list_cafe_bookings(db: Session, cafe_id: int) -> list[Booking]:
 
 
 def cancel_booking(db: Session, booking_id: int) -> Booking:
-    booking = db.get(Booking, booking_id)
+    stmt = select(Booking).where(Booking.id == booking_id)
+    if db.bind.dialect.name != "sqlite":
+        stmt = stmt.with_for_update()
+    booking = db.execute(stmt).scalar_one_or_none()
     if booking is None:
         raise APIError(
             404, f"Booking with id {booking_id} not found.", code="booking_not_found"
@@ -158,7 +167,7 @@ def get_availability(db: Session, cafe_id: int, on_date: date_type) -> dict:
     """Open seats per slot for a cafe on a given date."""
     cafe = get_cafe_or_404(db, cafe_id)
     rows = db.execute(
-        select(Booking.time_slot, func.sum(Booking.seats_booked))
+        select(Booking.time_slot, func.coalesce(func.sum(Booking.seats_booked), 0))
         .where(
             Booking.cafe_id == cafe_id,
             Booking.date == on_date,
