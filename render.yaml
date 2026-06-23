@@ -1,0 +1,27 @@
+# Render blueprint — provisions the API and a free Postgres database.
+# In the Render dashboard: New + > Blueprint > point at this repo.
+services:
+  - type: web
+    name: playgg-booking-api
+    runtime: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.13.5"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: playgg-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true        # Render generates a strong secret
+      - key: ADMIN_USERNAME
+        value: admin
+      - key: ADMIN_PASSWORD
+        sync: false                # set this yourself in the dashboard
+
+databases:
+  - name: playgg-db
+    plan: free
